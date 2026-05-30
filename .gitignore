@@ -1,0 +1,4 @@
+# API anahtarı içeren dosyaları GitHub'a gönderme
+# (config.js artık anahtar içermiyor ama yine de ekledik)
+.env
+*.env

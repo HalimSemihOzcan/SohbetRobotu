@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EMO — Sesli Sohbet</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Nunito:wght@600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="app">
+  <div class="logo">E M O</div>
+  <div class="sub">AI Sesli Arkadaş</div>
+
+  <div class="robot-scene">
+    <div class="stage-glow"></div>
+    <svg id="emoRoot" viewBox="0 0 240 310" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="softglow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <pattern id="scan" x="0" y="0" width="1" height="4" patternUnits="userSpaceOnUse">
+          <rect width="1" height="2" fill="rgba(0,0,0,.18)"/>
+        </pattern>
+        <clipPath id="screenClip">
+          <rect x="50" y="50" width="140" height="100" rx="14"/>
+        </clipPath>
+      </defs>
+
+      <!-- LEGS -->
+      <g id="legL" style="transform-origin:85px 240px">
+        <rect x="62" y="236" width="46" height="58" rx="13" fill="#12122a" stroke="#1e1e40" stroke-width="1.5"/>
+        <rect x="66" y="278" width="38" height="17" rx="8" fill="#0a0a1a" stroke="#00d4ff" stroke-width="1" opacity=".8"/>
+        <rect x="74" y="243" width="10" height="4" rx="2" fill="#00d4ff" opacity=".5"/>
+      </g>
+      <g id="legR" style="transform-origin:155px 240px">
+        <rect x="132" y="236" width="46" height="58" rx="13" fill="#12122a" stroke="#1e1e40" stroke-width="1.5"/>
+        <rect x="136" y="278" width="38" height="17" rx="8" fill="#0a0a1a" stroke="#00d4ff" stroke-width="1" opacity=".8"/>
+        <rect x="156" y="243" width="10" height="4" rx="2" fill="#00d4ff" opacity=".5"/>
+      </g>
+
+      <!-- BODY -->
+      <rect x="54" y="172" width="132" height="72" rx="18" fill="#12122a" stroke="#1e1e40" stroke-width="1.5"/>
+      <rect x="84" y="184" width="72" height="36" rx="8" fill="#09091a" stroke="#181830" stroke-width="1"/>
+      <circle id="chestLed" cx="120" cy="202" r="6" fill="#00ff88" filter="url(#glow)" opacity=".9"/>
+      <circle cx="120" cy="202" r="10" fill="none" stroke="#00ff88" stroke-width=".5" opacity=".25"/>
+      <rect x="60" y="190" width="10" height="6" rx="3" fill="#ff3366" opacity=".7"/>
+      <rect x="170" y="190" width="10" height="6" rx="3" fill="#00d4ff" opacity=".7"/>
+      <line x1="88" y1="226" x2="152" y2="226" stroke="#1e1e40" stroke-width="1"/>
+      <line x1="88" y1="230" x2="152" y2="230" stroke="#1e1e40" stroke-width="1"/>
+      <rect id="armL" x="36" y="180" width="20" height="44" rx="10" fill="#10102a" stroke="#1e1e40" stroke-width="1.5" style="transform-origin:46px 180px"/>
+      <rect id="armR" x="184" y="180" width="20" height="44" rx="10" fill="#10102a" stroke="#1e1e40" stroke-width="1.5" style="transform-origin:194px 180px"/>
+
+      <!-- NECK -->
+      <rect x="102" y="158" width="36" height="18" rx="7" fill="#0d0d1e" stroke="#181830" stroke-width="1"/>
+      <rect x="110" y="162" width="20" height="6" rx="3" fill="#080816"/>
+
+      <!-- HEAD -->
+      <g id="headGroup">
+        <rect x="30" y="38" width="180" height="126" rx="26" fill="#14142e" stroke="#202048" stroke-width="2"/>
+        <rect x="42" y="48" width="156" height="106" rx="20" fill="#07070f" stroke="#181830" stroke-width="1"/>
+
+        <!-- HEADPHONES -->
+        <ellipse cx="30" cy="102" rx="20" ry="24" fill="#1a1a38" stroke="#252550" stroke-width="1.5"/>
+        <ellipse cx="30" cy="102" rx="12" ry="16" fill="#090918"/>
+        <ellipse cx="30" cy="102" rx="6" ry="9" fill="#00d4ff" opacity=".1"/>
+        <line x1="30" y1="78" x2="50" y2="48" stroke="#202048" stroke-width="3.5" stroke-linecap="round"/>
+        <ellipse cx="210" cy="102" rx="20" ry="24" fill="#1a1a38" stroke="#252550" stroke-width="1.5"/>
+        <ellipse cx="210" cy="102" rx="12" ry="16" fill="#090918"/>
+        <ellipse cx="210" cy="102" rx="6" ry="9" fill="#00d4ff" opacity=".1"/>
+        <line x1="210" y1="78" x2="190" y2="48" stroke="#202048" stroke-width="3.5" stroke-linecap="round"/>
+
+        <!-- SCREEN -->
+        <rect x="50" y="52" width="140" height="98" rx="14" fill="#04040e"/>
+        <rect id="screenGlow" x="50" y="52" width="140" height="98" rx="14" fill="#00d4ff" opacity=".03"/>
+
+        <g clip-path="url(#screenClip)">
+          <!-- LEFT EYE -->
+          <g id="eyeL">
+            <rect x="62" y="64" width="46" height="46" rx="10" fill="#070710" stroke="#0a0a20" stroke-width="1"/>
+            <rect id="pupilL" x="66" y="68" width="38" height="38" rx="9" fill="#00d4ff" filter="url(#glow)"/>
+            <rect x="72" y="74" width="12" height="12" rx="3" fill="#fff" opacity=".85" pointer-events="none"/>
+            <rect x="86" y="80" width="7" height="7" rx="2" fill="#fff" opacity=".35" pointer-events="none"/>
+            <rect id="lidL" x="62" y="64" width="46" height="46" rx="10" fill="#04040e" transform="scaleY(0)" style="transform-origin:85px 64px"/>
+          </g>
+          <!-- RIGHT EYE -->
+          <g id="eyeR">
+            <rect x="132" y="64" width="46" height="46" rx="10" fill="#070710" stroke="#0a0a20" stroke-width="1"/>
+            <rect id="pupilR" x="136" y="68" width="38" height="38" rx="9" fill="#00d4ff" filter="url(#glow)"/>
+            <rect x="142" y="74" width="12" height="12" rx="3" fill="#fff" opacity=".85" pointer-events="none"/>
+            <rect x="156" y="80" width="7" height="7" rx="2" fill="#fff" opacity=".35" pointer-events="none"/>
+            <rect id="lidR" x="132" y="64" width="46" height="46" rx="10" fill="#04040e" transform="scaleY(0)" style="transform-origin:155px 64px"/>
+          </g>
+          <!-- MOUTH -->
+          <g id="mouthGroup">
+            <path id="mouthPath" d="M88 124 Q120 136 152 124" fill="none" stroke="#00d4ff" stroke-width="2.5" stroke-linecap="round" filter="url(#glow)"/>
+            <ellipse id="mouthOval" cx="120" cy="128" rx="0" ry="0" fill="#00d4ff" opacity=".55"/>
+            <!-- overlays -->
+            <g id="ovlHearts" opacity="0">
+              <text x="85" y="100" font-size="30" fill="#ff3366" text-anchor="middle" filter="url(#softglow)">♥</text>
+              <text x="155" y="100" font-size="30" fill="#ff3366" text-anchor="middle" filter="url(#softglow)">♥</text>
+            </g>
+            <g id="ovlX" opacity="0">
+              <line x1="62" y1="64" x2="108" y2="110" stroke="#ff3366" stroke-width="3.5" stroke-linecap="round"/>
+              <line x1="108" y1="64" x2="62" y2="110" stroke="#ff3366" stroke-width="3.5" stroke-linecap="round"/>
+              <line x1="132" y1="64" x2="178" y2="110" stroke="#ff3366" stroke-width="3.5" stroke-linecap="round"/>
+              <line x1="178" y1="64" x2="132" y2="110" stroke="#ff3366" stroke-width="3.5" stroke-linecap="round"/>
+            </g>
+            <g id="ovlStars" opacity="0">
+              <text x="85" y="102" font-size="26" fill="#ffd60a" text-anchor="middle">★</text>
+              <text x="155" y="102" font-size="26" fill="#ffd60a" text-anchor="middle">★</text>
+            </g>
+            <g id="ovlZzz" opacity="0">
+              <line x1="64" y1="87" x2="106" y2="87" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+              <line x1="134" y1="87" x2="176" y2="87" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+              <text x="100" y="72" font-size="18" fill="#7c6ff7" text-anchor="middle" opacity=".9">z</text>
+              <text x="115" y="60" font-size="14" fill="#7c6ff7" text-anchor="middle" opacity=".7">z</text>
+            </g>
+            <g id="ovlSadBrows" opacity="0">
+              <line x1="62" y1="72" x2="80" y2="64" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+              <line x1="132" y1="72" x2="150" y2="64" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+            </g>
+            <g id="ovlAngryBrows" opacity="0">
+              <line x1="62" y1="66" x2="108" y2="78" stroke="#ff3366" stroke-width="3.5" stroke-linecap="round"/>
+              <line x1="132" y1="78" x2="178" y2="66" stroke="#ff3366" stroke-width="3.5" stroke-linecap="round"/>
+            </g>
+            <g id="ovlWinkLid" opacity="0">
+              <rect x="132" y="64" width="46" height="46" rx="10" fill="#04040e"/>
+              <line x1="134" y1="87" x2="176" y2="87" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+            </g>
+            <text id="ovlQ" x="155" y="100" font-size="24" fill="#ffd60a" text-anchor="middle" opacity="0">?</text>
+          </g>
+          <rect x="50" y="52" width="140" height="98" rx="14" fill="url(#scan)" opacity=".4" pointer-events="none"/>
+        </g>
+
+        <circle cx="58" cy="60" r="2.5" fill="#00d4ff" opacity=".25"/>
+        <circle cx="182" cy="60" r="2.5" fill="#00d4ff" opacity=".25"/>
+        <circle cx="58" cy="142" r="2.5" fill="#00d4ff" opacity=".25"/>
+        <circle cx="182" cy="142" r="2.5" fill="#00d4ff" opacity=".25"/>
+        <circle cx="120" cy="56" r="3.5" fill="#141428" stroke="#1e1e40" stroke-width="1"/>
+        <circle cx="120" cy="56" r="1.5" fill="#ff3366" opacity=".6"/>
+        <line x1="120" y1="38" x2="120" y2="22" stroke="#1e1e3a" stroke-width="2"/>
+        <circle id="antLed" cx="120" cy="17" r="5.5" fill="#00d4ff" opacity=".8" filter="url(#glow)"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="status-row">
+    <div class="led cyan" id="sLed"></div>
+    <span id="sText">HAZIR</span>
+  </div>
+
+  <div class="mic-wrap">
+    <button class="mic-btn" id="btnMic">🎙️</button>
+    <span class="mic-label" id="micLbl">KONUŞMAK İÇİN BAS</span>
+  </div>
+
+  <div class="chat" id="chat"></div>
+  <div class="err" id="errEl" style="display:none"></div>
+  <p class="footer">EMO — LIVING.AI STYLE</p>
+</div>
+
+<script src="config.js"></script>
+<script src="face.js"></script>
+<script src="body.js"></script>
+<script src="speech.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
