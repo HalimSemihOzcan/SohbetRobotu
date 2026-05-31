@@ -248,9 +248,10 @@ async function speakLine(text, done) {
     const audioUrl = await speakWithGroqTTS(text);
     const audio = new Audio(audioUrl);
     audio.onended = () => { clearTimeout(safeTimeout); URL.revokeObjectURL(audioUrl); done(); };
-    audio.onerror = () => { clearTimeout(safeTimeout); done(); };
+    audio.onerror = () => { clearTimeout(safeTimeout); URL.revokeObjectURL(audioUrl); done(); };
     await audio.play();
   } catch(e) {
+    console.warn('speakLine hata:', e.message);
     clearTimeout(safeTimeout);
     done();
   }

@@ -230,32 +230,28 @@ async function askGroq(userText) {
 }
 
 /* ─────────────────────────────────────────
-   TTS — ElevenLabs (doğal Türkçe ses)
+   TTS — Groq PlayAI (Fritz — doğal erkek sesi)
+   Farklı ses denemek için VOICE_ID değiştir:
+   Fritz-PlayAI | Thunder-PlayAI | Mamaw-PlayAI
+   Chip-PlayAI  | Newsman-PlayAI | Savannah-PlayAI
 ───────────────────────────────────────── */
-const ELEVENLABS_API_KEY = 'sk_23cf3e90bade927701b0997dab579f2d32c9085236521075';
-// Türkçe için en doğal ses: Aria (çok dilli)
-const ELEVENLABS_VOICE_ID = 'pNInz6obpgDQGcFmaJgB'; // Adam — doğal erkek sesi
+const GROQ_TTS_VOICE = 'Fritz-PlayAI';
 
 async function speakWithGroqTTS(text) {
-  // ElevenLabs API — multilingual_v2 modeli Türkçe'yi çok iyi konuşur
-  const res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + ELEVENLABS_VOICE_ID, {
+  const res = await fetch('https://api.groq.com/openai/v1/audio/speech', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'xi-api-key': ELEVENLABS_API_KEY
+      'Authorization': 'Bearer ' + GROQ_API_KEY
     },
     body: JSON.stringify({
-      text: text,
-      model_id: 'eleven_multilingual_v2',
-      voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.75,
-        style: 0.3,
-        use_speaker_boost: true
-      }
+      model: 'playai-tts',
+      input: text,
+      voice: GROQ_TTS_VOICE,
+      response_format: 'mp3'
     })
   });
-  if (!res.ok) throw new Error('ElevenLabs TTS hatası: ' + res.status);
+  if (!res.ok) throw new Error('Groq TTS hatası: ' + res.status);
   const blob = await res.blob();
   return URL.createObjectURL(blob);
 }
@@ -294,10 +290,21 @@ async function speak(text, emo) {
     const audio = new Audio(audioUrl);
     currentAudio = audio;
     audio.onended = () => { URL.revokeObjectURL(audioUrl); finishSpeaking(emo); };
-    audio.onerror = () => { URL.revokeObjectURL(audioUrl); finishSpeaking(emo); };
-    await audio.play();
+    audio.onerror = (e) => {
+      console.error('Audio oynatma hatası:', e);
+      URL.revokeObjectURL(audioUrl);
+      finishSpeaking(emo);
+    };
+    const playPromise = audio.play();
+    if (playPromise) {
+      playPromise.catch(e => {
+        console.error('Play hatası:', e);
+        finishSpeaking(emo);
+      });
+    }
   } catch (err) {
-    console.warn('Groq TTS başarısız, Web Speech deneniyor:', err.message);
+    console.error('ElevenLabs TTS tamamen başarısız:', err.message);
+    // Son çare: Web Speech
     try { await speakWithWebSpeech(text); } catch(e) {}
     finishSpeaking(emo);
   }
