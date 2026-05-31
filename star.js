@@ -281,6 +281,11 @@ window.askGroqWithMarriageCheck = function(text) {
 
 /* ── RESET — yıldız bittikten sonra her şeyi sıfırla ── */
 function resetAfterStar() {
+  // Timer bar ve overlay'i kaldır
+  const tb = document.getElementById('starTimerBar');
+  const ov = document.getElementById('starOverlay');
+  if (tb) tb.remove();
+  if (ov) ov.remove();
   // isProcessing kilidini aç
   if (typeof isProcessing !== 'undefined') isProcessing = false;
   // state'i idle'a al
