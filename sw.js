@@ -17,6 +17,7 @@ const ASSETS = [
   '/star.js',
   '/mood.js',
   '/soldier.js',
+  '/flower.js',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
