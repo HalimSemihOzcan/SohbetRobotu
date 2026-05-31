@@ -130,6 +130,7 @@ function holdStar() {
 async function runStarSequence() {
   if (starModeActive) return;
   starModeActive = true;
+  try {
 
   const { overlay, star, starBubble, timerFill } = createStarUI();
 
@@ -236,30 +237,28 @@ async function runStarSequence() {
   timerBar.remove();
 
   await delay(500);
-  setExpression('neutral');
-  setHeadTilt(0);
-  starModeActive = false;
+  resetAfterStar();
+  } catch(e) { console.warn('Star error:', e); resetAfterStar(); }
 }
 
 /* ── YARDIMCI: sesli konuşma (TTS olmadan da çalışır) ── */
 function speakLine(text, done) {
-  if (typeof speak === 'function') {
-    // speak fonksiyonu promise dönmüyor, onend'i taklit et
-    const synth = window.speechSynthesis;
-    if (synth) {
-      synth.cancel();
-      const utt = new SpeechSynthesisUtterance(text);
-      utt.lang = 'tr-TR'; utt.rate = 1.0; utt.pitch = 1.1;
-      const voices = synth.getVoices();
-      const tr = voices.find(v => v.lang.startsWith('tr'));
-      if (tr) utt.voice = tr;
-      utt.onend = utt.onerror = () => done();
-      synth.speak(utt);
-      return;
-    }
+  // Güvenli timeout — ne olursa olsun done() çağrılır
+  const safeTimeout = setTimeout(() => done(), 6000);
+  const synth = window.speechSynthesis;
+  if (synth) {
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'tr-TR'; utt.rate = 1.0; utt.pitch = 1.1;
+    const voices = synth.getVoices();
+    const tr = voices.find(v => v.lang.startsWith('tr'));
+    if (tr) utt.voice = tr;
+    utt.onend = utt.onerror = () => { clearTimeout(safeTimeout); done(); };
+    synth.speak(utt);
+  } else {
+    clearTimeout(safeTimeout);
+    setTimeout(done, 2500);
   }
-  // Fallback: sadece bekle
-  setTimeout(done, 2500);
 }
 
 function delay(ms) {
@@ -279,3 +278,21 @@ window.askGroqWithMarriageCheck = function(text) {
   if (_prevMarriageCheck) _prevMarriageCheck(text);
   else askGroq(text);
 };
+
+/* ── RESET — yıldız bittikten sonra her şeyi sıfırla ── */
+function resetAfterStar() {
+  // isProcessing kilidini aç
+  if (typeof isProcessing !== 'undefined') isProcessing = false;
+  // state'i idle'a al
+  if (typeof setState === 'function') setState('idle');
+  // yüzü sıfırla
+  if (typeof setExpression === 'function') setExpression('neutral');
+  if (typeof setHeadTilt === 'function') setHeadTilt(0);
+  // kolu sıfırla
+  resetArm();
+  // konuşmayı durdur
+  if (typeof stopSpeaking === 'function') stopSpeaking();
+  if (typeof stopMouth === 'function') stopMouth();
+  if (typeof stopTalkBounce === 'function') stopTalkBounce();
+  starModeActive = false;
+}
