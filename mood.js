@@ -13,7 +13,7 @@ function checkMoodCommand(text) {
   if (/mizahi mod|mizah mod|komik mod|sakaci mod|eglenceli mod|espri mod|sasirt beni|komik ol|daha komik|guldur beni/.test(t)) {
     return 'mizah';
   }
-  if (/normal mod|ciddi mod|normal ol|ciddi ol|mizahi moddan cik|komik moddan cik/.test(t)) {
+  if (/normal mod|ciddi mod|normal ol|ciddi ol|mizahi moddan cik|komik moddan cik|mizahtan cik|mizah modundan cik|komikten cik|espri modundan cik|mizahi kapat|komik kapat/.test(t)) {
     return 'normal';
   }
   return null;
