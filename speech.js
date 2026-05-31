@@ -230,39 +230,26 @@ async function askGroq(userText) {
 }
 
 /* ─────────────────────────────────────────
-   TTS — Hugging Face facebook/mms-tts-tur
-   Türkçe için eğitilmiş özel model
+   TTS — Groq PlayAI
 ───────────────────────────────────────── */
-const HF_TTS_URL = 'https://api-inference.huggingface.co/models/facebook/mms-tts-tur';
-
-function getHFKey() {
-  let key = localStorage.getItem('hf_api_key');
-  if (!key) {
-    key = prompt('Hugging Face API anahtarını gir (huggingface.co → Settings → Access Tokens):');
-    if (key && key.trim()) localStorage.setItem('hf_api_key', key.trim());
-  }
-  return key || '';
-}
+const GROQ_TTS_VOICE = 'Celeste-PlayAI';
 
 async function speakWithGroqTTS(text) {
-  const res = await fetch(HF_TTS_URL, {
+  const res = await fetch('https://api.groq.com/openai/v1/audio/speech', {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer ' + getHFKey(),
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + GROQ_API_KEY
     },
-    body: JSON.stringify({ inputs: text })
+    body: JSON.stringify({
+      model: 'playai-tts',
+      input: text,
+      voice: GROQ_TTS_VOICE,
+      response_format: 'mp3'
+    })
   });
-
-  if (!res.ok) {
-    const err = await res.text();
-    console.error('HF TTS hata:', res.status, err);
-    throw new Error('HF TTS: ' + res.status);
-  }
-
+  if (!res.ok) throw new Error('Groq TTS hatası: ' + res.status);
   const blob = await res.blob();
-  if (blob.size < 100) throw new Error('Boş ses geldi');
-  console.log('HF TTS ses alındı, boyut:', blob.size);
   return URL.createObjectURL(blob);
 }
 
