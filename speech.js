@@ -208,7 +208,7 @@ async function askGroq(userText) {
       body: JSON.stringify({
         model: GROQ_MODEL,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: (typeof getSystemPrompt === 'function' ? getSystemPrompt() : SYSTEM_PROMPT) },
           { role: 'user',   content: userText }
         ],
         max_tokens: 220,

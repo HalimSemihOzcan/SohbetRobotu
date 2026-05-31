@@ -15,6 +15,7 @@ const ASSETS = [
   '/app.js',
   '/touch.js',
   '/star.js',
+  '/mood.js',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
