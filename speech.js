@@ -1,10 +1,11 @@
 /**
  * speech.js
  * Ses tanıma (STT) ve ses sentezi (TTS) işlemlerini yönetir.
- * Groq API üzerinden yapay zeka yanıtı alır.
+ * Mobil uyumluluk için Groq TTS API kullanılır.
  */
 
 let recognition = null;
+let currentAudio = null;
 
 /* ── SHOT / BLOW DETECTION ── */
 function checkShot(text) {
@@ -59,7 +60,7 @@ function buildRecognition() {
   return r;
 }
 
-/* ── ASK GROQ ── */
+/* ── ASK GROQ (metin cevabı) ── */
 async function askGroq(userText) {
   try {
     const res = await fetch(GROQ_API_URL, {
@@ -84,7 +85,7 @@ async function askGroq(userText) {
 
     addBubble(reply, 'ai');
     const emo = detectEmoFromText(reply);
-    speak(reply, emo);
+    await speak(reply, emo);
 
   } catch (err) {
     setState('idle');
@@ -93,61 +94,122 @@ async function askGroq(userText) {
   }
 }
 
-/* ── TTS ── */
-function speak(text, emo) {
-  const synth = window.speechSynthesis;
-  synth.cancel();
+/* ── GROQ TTS (mobil uyumlu) ── */
+async function speakWithGroqTTS(text) {
+  const res = await fetch('https://api.groq.com/openai/v1/audio/speech', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + GROQ_API_KEY
+    },
+    body: JSON.stringify({
+      model: 'playai-tts',
+      input: text,
+      voice: 'Celeste-PlayAI',  // doğal kadın sesi
+      response_format: 'mp3'
+    })
+  });
 
-  setTimeout(() => {
+  if (!res.ok) throw new Error('TTS API hatası: ' + res.status);
+
+  const blob = await res.blob();
+  const url  = URL.createObjectURL(blob);
+  return url;
+}
+
+/* ── FALLBACK: Web Speech API TTS ── */
+function speakWithWebSpeech(text) {
+  return new Promise((resolve) => {
+    const synth = window.speechSynthesis;
+    synth.cancel();
+
     const utt    = new SpeechSynthesisUtterance(text);
     utt.lang     = 'tr-TR';
     utt.rate     = 1.05;
     utt.pitch    = 1.05;
     utt.volume   = 1;
 
-    const voices = synth.getVoices();
+    const voices  = synth.getVoices();
     const trVoice =
       voices.find(v => v.lang.startsWith('tr') && v.localService && !v.name.includes('Google')) ||
       voices.find(v => v.lang.startsWith('tr') && v.localService) ||
       voices.find(v => v.lang.startsWith('tr'));
     if (trVoice) utt.voice = trVoice;
 
-    utt.onstart = () => {
-      setState('speaking');
-      setExpression('neutral');
-      startMouth();
-      startTalkBounce();
-    };
-
-    utt.onend = () => {
-      stopMouth();
-      stopTalkBounce();
-      setExpression(emo || 'happy');
-      doHappyBounce(2);
-      setTimeout(() => {
-        if (!['fallen','dizzy','sleeping'].includes(currentEmo)) setExpression('neutral');
-      }, 2500);
-      setState('idle');
-    };
-
-    utt.onerror = () => {
-      stopMouth();
-      stopTalkBounce();
-      setExpression('neutral');
-      setState('idle');
-    };
-
+    utt.onend   = () => resolve();
+    utt.onerror = () => resolve();
     synth.speak(utt);
-  }, 80);
+  });
+}
+
+/* ── ANA SPEAK FONKSİYONU ── */
+async function speak(text, emo) {
+  setState('speaking');
+  setExpression('neutral');
+  startMouth();
+  startTalkBounce();
+
+  try {
+    // Önce Groq TTS dene (mobil dahil her yerde çalışır)
+    const audioUrl = await speakWithGroqTTS(text);
+
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio = null;
+    }
+
+    const audio = new Audio(audioUrl);
+    currentAudio = audio;
+
+    audio.onended = () => {
+      URL.revokeObjectURL(audioUrl);
+      finishSpeaking(emo);
+    };
+    audio.onerror = () => {
+      URL.revokeObjectURL(audioUrl);
+      finishSpeaking(emo);
+    };
+
+    await audio.play();
+
+  } catch (err) {
+    // Groq TTS başarısız olursa Web Speech API'ye düş
+    console.warn('Groq TTS başarısız, Web Speech kullanılıyor:', err.message);
+    try {
+      await speakWithWebSpeech(text);
+    } catch (e) {
+      console.warn('Web Speech da başarısız:', e);
+    }
+    finishSpeaking(emo);
+  }
+}
+
+/* ── KONUŞMA BİTİŞ ── */
+function finishSpeaking(emo) {
+  stopMouth();
+  stopTalkBounce();
+  setExpression(emo || 'happy');
+  doHappyBounce(2);
+  setTimeout(() => {
+    if (!['fallen', 'dizzy', 'sleeping'].includes(currentEmo)) setExpression('neutral');
+  }, 2500);
+  setState('idle');
+}
+
+/* ── SESİ DURDUR ── */
+function stopSpeaking() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  window.speechSynthesis && window.speechSynthesis.cancel();
 }
 
 /* ── INIT ── */
 function initSpeech() {
   recognition = buildRecognition();
-  if (typeof speechSynthesis !== 'undefined') {
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-      speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
-    }
+  if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
     speechSynthesis.getVoices();
   }
 }

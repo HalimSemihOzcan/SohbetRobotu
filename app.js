@@ -9,9 +9,7 @@
   let key = localStorage.getItem('groq_api_key');
   if (!key) {
     key = prompt(
-      'Groq API anahtarını gir.\n\n' +
-      'Ücretsiz almak için: console.groq.com\n\n' +
-      'Anahtar "gsk_..." ile başlar:'
+      'Groq API anahtarını gir.\n\nÜcretsiz almak için: console.groq.com\n\nAnahtar "gsk_..." ile başlar:'
     );
     if (key && key.trim()) {
       localStorage.setItem('groq_api_key', key.trim());
@@ -71,7 +69,7 @@ btnMic.addEventListener('click', () => {
   errEl.style.display = 'none';
 
   if (appState === 'speaking') {
-    window.speechSynthesis.cancel();
+    stopSpeaking();
     stopMouth();
     stopTalkBounce();
     setExpression('neutral');
