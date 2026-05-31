@@ -2,12 +2,99 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#00d4ff"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="EMO"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" href="icons/icon-192.png"/>
 <title>EMO — Sesli Sohbet</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Nunito:wght@600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="style.css"/>
+<style>
+/* ── DOKUNMA RIPPLE ── */
+.ripple {
+  position: fixed;
+  border-radius: 50%;
+  width: 60px; height: 60px;
+  margin-left: -30px; margin-top: -30px;
+  background: rgba(0,212,255,0.35);
+  animation: rippleAnim 0.6s ease-out forwards;
+  pointer-events: none;
+  z-index: 9999;
+}
+@keyframes rippleAnim {
+  0%   { transform: scale(0); opacity: 1; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+/* ── EVLILIK OVERLAY ── */
+#marriageOverlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center; justify-content: center;
+  flex-direction: column;
+  z-index: 1000;
+  gap: 12px;
+}
+#marriageOverlay.show { display: flex; }
+.hearts-rain {
+  position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 999;
+}
+.heart-fall {
+  position: absolute;
+  font-size: 24px;
+  animation: heartFall linear forwards;
+  top: -40px;
+}
+@keyframes heartFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+}
+.marriage-msg {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.1rem;
+  color: #ff3366;
+  text-align: center;
+  text-shadow: 0 0 20px rgba(255,51,102,0.8);
+  max-width: 320px;
+  line-height: 1.6;
+  padding: 0 1rem;
+}
+.marriage-close {
+  margin-top: 8px;
+  padding: 10px 28px;
+  border-radius: 24px;
+  border: 1.5px solid #ff3366;
+  background: transparent;
+  color: #ff3366;
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  letter-spacing: 2px;
+}
+.marriage-close:hover { background: rgba(255,51,102,0.1); }
+
+/* ── TOUCH ZONE LABELS (debug kapalı) ── */
+#emoRoot { cursor: pointer; }
+</style>
 </head>
 <body>
+
+<!-- Kalp yağmuru -->
+<div class="hearts-rain" id="heartsRain"></div>
+
+<!-- Evlilik overlay -->
+<div id="marriageOverlay">
+  <div style="font-size:3rem;">💍</div>
+  <div class="marriage-msg" id="marriageMsg">Evet! Seninle evlenmek isterim! 💕</div>
+  <button class="marriage-close" onclick="closeMarriage()">TAMAM 💖</button>
+</div>
+
 <div class="app">
   <div class="logo">E M O</div>
   <div class="sub">AI Sesli Arkadaş</div>
@@ -21,12 +108,10 @@
         <pattern id="scan" x="0" y="0" width="1" height="4" patternUnits="userSpaceOnUse">
           <rect width="1" height="2" fill="rgba(0,0,0,.18)"/>
         </pattern>
-        <clipPath id="screenClip">
-          <rect x="50" y="50" width="140" height="100" rx="14"/>
-        </clipPath>
+        <clipPath id="screenClip"><rect x="50" y="50" width="140" height="100" rx="14"/></clipPath>
       </defs>
 
-      <!-- LEGS -->
+      <!-- ── LEGS ── -->
       <g id="legL" style="transform-origin:85px 240px">
         <rect x="62" y="236" width="46" height="58" rx="13" fill="#12122a" stroke="#1e1e40" stroke-width="1.5"/>
         <rect x="66" y="278" width="38" height="17" rx="8" fill="#0a0a1a" stroke="#00d4ff" stroke-width="1" opacity=".8"/>
@@ -38,7 +123,7 @@
         <rect x="156" y="243" width="10" height="4" rx="2" fill="#00d4ff" opacity=".5"/>
       </g>
 
-      <!-- BODY -->
+      <!-- ── BODY ── -->
       <rect x="54" y="172" width="132" height="72" rx="18" fill="#12122a" stroke="#1e1e40" stroke-width="1.5"/>
       <rect x="84" y="184" width="72" height="36" rx="8" fill="#09091a" stroke="#181830" stroke-width="1"/>
       <circle id="chestLed" cx="120" cy="202" r="6" fill="#00ff88" filter="url(#glow)" opacity=".9"/>
@@ -50,11 +135,38 @@
       <rect id="armL" x="36" y="180" width="20" height="44" rx="10" fill="#10102a" stroke="#1e1e40" stroke-width="1.5" style="transform-origin:46px 180px"/>
       <rect id="armR" x="184" y="180" width="20" height="44" rx="10" fill="#10102a" stroke="#1e1e40" stroke-width="1.5" style="transform-origin:194px 180px"/>
 
-      <!-- NECK -->
+      <!-- ── DAMATLIK ── (başta gizli) -->
+      <g id="suit" opacity="0">
+        <!-- Ceket gövde -->
+        <path d="M54 172 L54 244 L186 244 L186 172 Z" fill="#1a1a2e" opacity="0.95"/>
+        <!-- Ceket yaka sol -->
+        <path d="M100 172 L82 190 L100 210 Z" fill="#252545"/>
+        <!-- Ceket yaka sağ -->
+        <path d="M140 172 L158 190 L140 210 Z" fill="#252545"/>
+        <!-- Gömlek beyaz orta -->
+        <rect x="108" y="172" width="24" height="44" fill="#dde8ff" opacity="0.9"/>
+        <!-- Kravat -->
+        <polygon points="120,178 114,196 120,218 126,196" fill="#ff3366"/>
+        <polygon points="116,178 124,178 122,188 118,188" fill="#cc1144"/>
+        <!-- Ceket düğme sol -->
+        <circle cx="102" cy="220" r="3" fill="#3a3a6a"/>
+        <!-- Ceket düğme sağ -->
+        <circle cx="138" cy="220" r="3" fill="#3a3a6a"/>
+        <!-- Yaka çizgi -->
+        <line x1="100" y1="172" x2="108" y2="210" stroke="#2a2a4a" stroke-width="1"/>
+        <line x1="140" y1="172" x2="132" y2="210" stroke="#2a2a4a" stroke-width="1"/>
+        <!-- Gömlek düğmeleri -->
+        <circle cx="120" cy="185" r="2" fill="#aabbcc" opacity="0.8"/>
+        <circle cx="120" cy="193" r="2" fill="#aabbcc" opacity="0.8"/>
+        <!-- Mendil -->
+        <polygon points="166,182 176,178 178,190 170,188" fill="#ff3366" opacity="0.9"/>
+      </g>
+
+      <!-- ── NECK ── -->
       <rect x="102" y="158" width="36" height="18" rx="7" fill="#0d0d1e" stroke="#181830" stroke-width="1"/>
       <rect x="110" y="162" width="20" height="6" rx="3" fill="#080816"/>
 
-      <!-- HEAD -->
+      <!-- ── HEAD ── -->
       <g id="headGroup">
         <rect x="30" y="38" width="180" height="126" rx="26" fill="#14142e" stroke="#202048" stroke-width="2"/>
         <rect x="42" y="48" width="156" height="106" rx="20" fill="#07070f" stroke="#181830" stroke-width="1"/>
@@ -62,11 +174,9 @@
         <!-- HEADPHONES -->
         <ellipse cx="30" cy="102" rx="20" ry="24" fill="#1a1a38" stroke="#252550" stroke-width="1.5"/>
         <ellipse cx="30" cy="102" rx="12" ry="16" fill="#090918"/>
-        <ellipse cx="30" cy="102" rx="6" ry="9" fill="#00d4ff" opacity=".1"/>
         <line x1="30" y1="78" x2="50" y2="48" stroke="#202048" stroke-width="3.5" stroke-linecap="round"/>
         <ellipse cx="210" cy="102" rx="20" ry="24" fill="#1a1a38" stroke="#252550" stroke-width="1.5"/>
         <ellipse cx="210" cy="102" rx="12" ry="16" fill="#090918"/>
-        <ellipse cx="210" cy="102" rx="6" ry="9" fill="#00d4ff" opacity=".1"/>
         <line x1="210" y1="78" x2="190" y2="48" stroke="#202048" stroke-width="3.5" stroke-linecap="round"/>
 
         <!-- SCREEN -->
@@ -94,19 +204,18 @@
           <g id="mouthGroup">
             <path id="mouthPath" d="M88 124 Q120 136 152 124" fill="none" stroke="#00d4ff" stroke-width="2.5" stroke-linecap="round" filter="url(#glow)"/>
             <ellipse id="mouthOval" cx="120" cy="128" rx="0" ry="0" fill="#00d4ff" opacity=".55"/>
-            <!-- overlays -->
             <g id="ovlHearts" opacity="0">
-              <text x="85" y="100" font-size="30" fill="#ff3366" text-anchor="middle" filter="url(#softglow)">♥</text>
+              <text x="85"  y="100" font-size="30" fill="#ff3366" text-anchor="middle" filter="url(#softglow)">♥</text>
               <text x="155" y="100" font-size="30" fill="#ff3366" text-anchor="middle" filter="url(#softglow)">♥</text>
             </g>
             <g id="ovlX" opacity="0">
               <line x1="62" y1="64" x2="108" y2="110" stroke="#ff3366" stroke-width="3.5" stroke-linecap="round"/>
-              <line x1="108" y1="64" x2="62" y2="110" stroke="#ff3366" stroke-width="3.5" stroke-linecap="round"/>
+              <line x1="108" y1="64" x2="62"  y2="110" stroke="#ff3366" stroke-width="3.5" stroke-linecap="round"/>
               <line x1="132" y1="64" x2="178" y2="110" stroke="#ff3366" stroke-width="3.5" stroke-linecap="round"/>
               <line x1="178" y1="64" x2="132" y2="110" stroke="#ff3366" stroke-width="3.5" stroke-linecap="round"/>
             </g>
             <g id="ovlStars" opacity="0">
-              <text x="85" y="102" font-size="26" fill="#ffd60a" text-anchor="middle">★</text>
+              <text x="85"  y="102" font-size="26" fill="#ffd60a" text-anchor="middle">★</text>
               <text x="155" y="102" font-size="26" fill="#ffd60a" text-anchor="middle">★</text>
             </g>
             <g id="ovlZzz" opacity="0">
@@ -116,7 +225,7 @@
               <text x="115" y="60" font-size="14" fill="#7c6ff7" text-anchor="middle" opacity=".7">z</text>
             </g>
             <g id="ovlSadBrows" opacity="0">
-              <line x1="62" y1="72" x2="80" y2="64" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+              <line x1="62" y1="72" x2="80"  y2="64" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" opacity=".7"/>
               <line x1="132" y1="72" x2="150" y2="64" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" opacity=".7"/>
             </g>
             <g id="ovlAngryBrows" opacity="0">
@@ -132,15 +241,26 @@
           <rect x="50" y="52" width="140" height="98" rx="14" fill="url(#scan)" opacity=".4" pointer-events="none"/>
         </g>
 
-        <circle cx="58" cy="60" r="2.5" fill="#00d4ff" opacity=".25"/>
-        <circle cx="182" cy="60" r="2.5" fill="#00d4ff" opacity=".25"/>
-        <circle cx="58" cy="142" r="2.5" fill="#00d4ff" opacity=".25"/>
+        <circle cx="58"  cy="60"  r="2.5" fill="#00d4ff" opacity=".25"/>
+        <circle cx="182" cy="60"  r="2.5" fill="#00d4ff" opacity=".25"/>
+        <circle cx="58"  cy="142" r="2.5" fill="#00d4ff" opacity=".25"/>
         <circle cx="182" cy="142" r="2.5" fill="#00d4ff" opacity=".25"/>
-        <circle cx="120" cy="56" r="3.5" fill="#141428" stroke="#1e1e40" stroke-width="1"/>
-        <circle cx="120" cy="56" r="1.5" fill="#ff3366" opacity=".6"/>
+        <circle cx="120" cy="56"  r="3.5" fill="#141428" stroke="#1e1e40" stroke-width="1"/>
+        <circle cx="120" cy="56"  r="1.5" fill="#ff3366" opacity=".6"/>
         <line x1="120" y1="38" x2="120" y2="22" stroke="#1e1e3a" stroke-width="2"/>
         <circle id="antLed" cx="120" cy="17" r="5.5" fill="#00d4ff" opacity=".8" filter="url(#glow)"/>
       </g>
+
+      <!-- ── TOUCH ZONES (görünmez, tıklama alanları) ── -->
+      <!-- Kafa -->
+      <rect id="touchHead" x="30" y="20" width="180" height="145" rx="26" fill="transparent"/>
+      <!-- Gövde -->
+      <rect id="touchBody" x="36" y="168" width="168" height="80" fill="transparent"/>
+      <!-- Sol ayak -->
+      <rect id="touchLegL" x="55" y="230" width="58" height="75" rx="10" fill="transparent"/>
+      <!-- Sağ ayak -->
+      <rect id="touchLegR" x="127" y="230" width="58" height="75" rx="10" fill="transparent"/>
+
     </svg>
   </div>
 
@@ -164,5 +284,14 @@
 <script src="body.js"></script>
 <script src="speech.js"></script>
 <script src="app.js"></script>
+<script src="touch.js"></script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW:', e));
+  });
+}
+</script>
 </body>
 </html>

@@ -63,7 +63,7 @@ function buildRecognition() {
     setState('thinking');
     setExpression('confused');
     setHeadTilt(10);
-    askGroq(text);
+    window.askGroqWithMarriageCheck ? window.askGroqWithMarriageCheck(text) : askGroq(text);
   };
 
   r.onerror = e => {
@@ -153,7 +153,7 @@ async function sendToWhisper(blob, mimeType) {
 
     addBubble(text, 'user');
     if (checkShot(text)) { isProcessing = false; setState('idle'); setExpression('fallen'); return; }
-    askGroq(text);
+    window.askGroqWithMarriageCheck ? window.askGroqWithMarriageCheck(text) : askGroq(text);
 
   } catch (err) {
     isProcessing = false;
