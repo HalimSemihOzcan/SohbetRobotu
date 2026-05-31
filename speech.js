@@ -230,23 +230,32 @@ async function askGroq(userText) {
 }
 
 /* ─────────────────────────────────────────
-   TTS — GROQ PlayAI
+   TTS — ElevenLabs (doğal Türkçe ses)
 ───────────────────────────────────────── */
+const ELEVENLABS_API_KEY = 'sk_23cf3e90bade927701b0997dab579f2d32c9085236521075';
+// Türkçe için en doğal ses: Aria (çok dilli)
+const ELEVENLABS_VOICE_ID = 'pNInz6obpgDQGcFmaJgB'; // Adam — doğal erkek sesi
+
 async function speakWithGroqTTS(text) {
-  const res = await fetch('https://api.groq.com/openai/v1/audio/speech', {
+  // ElevenLabs API — multilingual_v2 modeli Türkçe'yi çok iyi konuşur
+  const res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + ELEVENLABS_VOICE_ID, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + GROQ_API_KEY
+      'xi-api-key': ELEVENLABS_API_KEY
     },
     body: JSON.stringify({
-      model: 'playai-tts',
-      input: text,
-      voice: 'Celeste-PlayAI',
-      response_format: 'mp3'
+      text: text,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75,
+        style: 0.3,
+        use_speaker_boost: true
+      }
     })
   });
-  if (!res.ok) throw new Error('TTS API hatası: ' + res.status);
+  if (!res.ok) throw new Error('ElevenLabs TTS hatası: ' + res.status);
   const blob = await res.blob();
   return URL.createObjectURL(blob);
 }

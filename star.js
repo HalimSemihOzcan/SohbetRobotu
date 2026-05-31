@@ -242,22 +242,17 @@ async function runStarSequence() {
 }
 
 /* ── YARDIMCI: sesli konuşma (TTS olmadan da çalışır) ── */
-function speakLine(text, done) {
-  // Güvenli timeout — ne olursa olsun done() çağrılır
-  const safeTimeout = setTimeout(() => done(), 6000);
-  const synth = window.speechSynthesis;
-  if (synth) {
-    synth.cancel();
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = 'tr-TR'; utt.rate = 1.0; utt.pitch = 1.1;
-    const voices = synth.getVoices();
-    const tr = voices.find(v => v.lang.startsWith('tr'));
-    if (tr) utt.voice = tr;
-    utt.onend = utt.onerror = () => { clearTimeout(safeTimeout); done(); };
-    synth.speak(utt);
-  } else {
+async function speakLine(text, done) {
+  const safeTimeout = setTimeout(() => done(), 8000);
+  try {
+    const audioUrl = await speakWithGroqTTS(text);
+    const audio = new Audio(audioUrl);
+    audio.onended = () => { clearTimeout(safeTimeout); URL.revokeObjectURL(audioUrl); done(); };
+    audio.onerror = () => { clearTimeout(safeTimeout); done(); };
+    await audio.play();
+  } catch(e) {
     clearTimeout(safeTimeout);
-    setTimeout(done, 2500);
+    done();
   }
 }
 
