@@ -390,9 +390,9 @@ async function runSongSequence() {
             'Authorization': 'Bearer ' + apiKey
           },
           body: JSON.stringify({
-            model: 'playai-tts',
+            model: 'canopylabs/orpheus-v1-english',
             input: line,
-            voice: 'Celeste-PlayAI',
+            voice: 'tara',
             response_format: 'mp3'
           })
         });

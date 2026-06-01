@@ -232,8 +232,6 @@ async function askGroq(userText) {
 /* ─────────────────────────────────────────
    TTS — Groq PlayAI
 ───────────────────────────────────────── */
-const GROQ_TTS_VOICE = 'Celeste-PlayAI';
-
 async function speakWithGroqTTS(text) {
   const res = await fetch('https://api.groq.com/openai/v1/audio/speech', {
     method: 'POST',
@@ -242,9 +240,9 @@ async function speakWithGroqTTS(text) {
       'Authorization': 'Bearer ' + GROQ_API_KEY
     },
     body: JSON.stringify({
-      model: 'playai-tts',
+      model: 'canopylabs/orpheus-v1-english',
       input: text,
-      voice: GROQ_TTS_VOICE,
+      voice: 'tara',
       response_format: 'mp3'
     })
   });
