@@ -151,11 +151,12 @@ function buildStage() {
   const lyricsBox = `<div id="lyricsBox" style="
     position:absolute; bottom:90px; left:50%; transform:translateX(-50%);
     width:90%; max-width:380px; text-align:center;
-    font-family:'Nunito',sans-serif; font-size:1.1rem; font-weight:700;
-    color:#fff; text-shadow:0 0 20px rgba(180,140,255,.9), 0 0 40px rgba(180,140,255,.4);
+    font-family:'Nunito',sans-serif; font-size:1.15rem; font-weight:800;
+    color:#fff; text-shadow:0 0 20px rgba(180,140,255,1), 0 0 40px rgba(180,140,255,.6);
     line-height:1.6; min-height:60px;
-    background:rgba(0,0,0,.3); border-radius:16px; padding:12px 20px;
-    border:1px solid rgba(180,140,255,.2);
+    background:rgba(0,0,0,.7); border-radius:16px; padding:12px 20px;
+    border:2px solid rgba(180,140,255,.6);
+    z-index:820 !important;
   "></div>`;
 
   // Kapatma butonu
@@ -377,14 +378,16 @@ async function runSongSequence() {
     setExpression(i % 3 === 0 ? 'excited' : i % 3 === 1 ? 'happy' : 'wink');
 
     await new Promise(async resolve => {
-      const safeT = setTimeout(resolve, 9000);
+      const safeT = setTimeout(resolve, 12000);
       try {
-        // Groq TTS isteği
+        const apiKey = localStorage.getItem('groq_api_key') || '';
+        console.log('Şarkı satırı seslendirilyor:', line, 'Key uzunluğu:', apiKey.length);
+        
         const res = await fetch('https://api.groq.com/openai/v1/audio/speech', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + (localStorage.getItem('groq_api_key') || GROQ_API_KEY || '')
+            'Authorization': 'Bearer ' + apiKey
           },
           body: JSON.stringify({
             model: 'playai-tts',
@@ -393,16 +396,43 @@ async function runSongSequence() {
             response_format: 'mp3'
           })
         });
-        if (!res.ok) { clearTimeout(safeT); resolve(); return; }
+        
+        if (!res.ok) {
+          const errText = await res.text();
+          console.error('Groq TTS hata:', res.status, errText);
+          clearTimeout(safeT);
+          resolve();
+          return;
+        }
+        
         const blob = await res.blob();
-        const url  = URL.createObjectURL(blob);
+        console.log('Ses alındı, boyut:', blob.size);
+        const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
-        audio.playbackRate = 0.92;
-        audio.onended = () => { URL.revokeObjectURL(url); clearTimeout(safeT); resolve(); };
-        audio.onerror = () => { URL.revokeObjectURL(url); clearTimeout(safeT); resolve(); };
-        await audio.play();
+        audio.playbackRate = 0.93;
+        
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+          clearTimeout(safeT);
+          resolve();
+        };
+        audio.onerror = (e) => {
+          console.error('Audio hata:', e);
+          URL.revokeObjectURL(url);
+          clearTimeout(safeT);
+          resolve();
+        };
+        
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(e => {
+            console.error('Play hatası:', e);
+            clearTimeout(safeT);
+            resolve();
+          });
+        }
       } catch(e) {
-        console.warn('Şarkı sesi hatası:', e.message);
+        console.error('Şarkı sesi exception:', e.message);
         clearTimeout(safeT);
         resolve();
       }
