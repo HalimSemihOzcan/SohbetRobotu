@@ -11,18 +11,22 @@
 let songModeActive = false;
 
 const SONG_LYRICS = [
-  "Benim gönlüm sarhoştur... Yıldızların altında...",
-  "Sevişmek, ah, ne hoştur... Yıldızların altında...",
-  "Benim gönlüm sarhoştur... Yıldızların altında...",
-  "Sevişmek, ah, ne hoştur... Yıldızların altında...",
-  "Mavi nurdan bir ırmak... Gölgede bir salıncak...",
-  "Bir de ikimiz kalsak... Yıldızların altında...",
-  "Yanmam gönlüm yansa da... Ecel beni alsa da...",
-  "Gözlerim kapansa da... Yıldızların altında...",
-  "Gözlerim kapansa da... Yıldızların altında...",
-  "Benim gönlüm sarhoştur... Yıldızların altında...",
-  "Sevişmek, ah, ne hoştur... Yıldızların altında...",
-  "Gözlerim kapansa da... Yıldızların altında...",
+  "Benim gönlüm sarhoştur, yıldızların altında.",
+  "Sevişmek ah ne hoştur, yıldızların altında.",
+  "Benim gönlüm sarhoştur, yıldızların altında.",
+  "Sevişmek ah ne hoştur, yıldızların altında.",
+  "Mavi nurdan bir ırmak, gölgede bir salıncak.",
+  "Bir de ikimiz kalsak, yıldızların altında.",
+  "Yanmam gönlüm yansa da, ecel beni alsa da.",
+  "Gözlerim kapansa da, yıldızların altında.",
+  "Gözlerim kapansa da, yıldızların altında.",
+  "Gözlerim kapansa da, yıldızların altında.",
+  "Benim gönlüm sarhoştur, yıldızların altında.",
+  "Sevişmek ah ne hoştur, yıldızların altında.",
+  "Yanmam gönlüm yansa da, ecel beni alsa da.",
+  "Gözlerim kapansa da, yıldızların altında.",
+  "Gözlerim kapansa da, yıldızların altında.",
+  "Gözlerim kapansa da, yıldızların altında.",
 ];
 
 /* ── KOMUT TESPİT ── */
@@ -363,17 +367,36 @@ async function runSongSequence() {
     showLyric(line);
     setExpression(i % 3 === 0 ? 'excited' : i % 3 === 1 ? 'happy' : 'wink');
 
-    await new Promise(resolve => {
-      const safeT = setTimeout(resolve, 7000);
+    await new Promise(async resolve => {
+      const safeT = setTimeout(resolve, 9000);
       try {
-        speakWithGroqTTS(line).then(url => {
-          const audio = new Audio(url);
-          audio.playbackRate = 0.88; // biraz yavaş — şarkı ritmi
-          audio.onended = () => { URL.revokeObjectURL(url); clearTimeout(safeT); resolve(); };
-          audio.onerror = () => { clearTimeout(safeT); resolve(); };
-          audio.play().catch(() => { clearTimeout(safeT); resolve(); });
-        }).catch(() => { clearTimeout(safeT); resolve(); });
-      } catch(e) { clearTimeout(safeT); resolve(); }
+        // Groq TTS isteği
+        const res = await fetch('https://api.groq.com/openai/v1/audio/speech', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + GROQ_API_KEY
+          },
+          body: JSON.stringify({
+            model: 'playai-tts',
+            input: line,
+            voice: 'Celeste-PlayAI',
+            response_format: 'mp3'
+          })
+        });
+        if (!res.ok) { clearTimeout(safeT); resolve(); return; }
+        const blob = await res.blob();
+        const url  = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.playbackRate = 0.92;
+        audio.onended = () => { URL.revokeObjectURL(url); clearTimeout(safeT); resolve(); };
+        audio.onerror = () => { URL.revokeObjectURL(url); clearTimeout(safeT); resolve(); };
+        await audio.play();
+      } catch(e) {
+        console.warn('Şarkı sesi hatası:', e.message);
+        clearTimeout(safeT);
+        resolve();
+      }
     });
 
     await delay3(300);
