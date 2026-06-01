@@ -11,22 +11,22 @@
 let songModeActive = false;
 
 const SONG_LYRICS = [
-  "Benim gönlüm sarhoştur, yıldızların altında.",
-  "Sevişmek ah ne hoştur, yıldızların altında.",
-  "Benim gönlüm sarhoştur, yıldızların altında.",
-  "Sevişmek ah ne hoştur, yıldızların altında.",
-  "Mavi nurdan bir ırmak, gölgede bir salıncak.",
-  "Bir de ikimiz kalsak, yıldızların altında.",
-  "Yanmam gönlüm yansa da, ecel beni alsa da.",
-  "Gözlerim kapansa da, yıldızların altında.",
-  "Gözlerim kapansa da, yıldızların altında.",
-  "Gözlerim kapansa da, yıldızların altında.",
-  "Benim gönlüm sarhoştur, yıldızların altında.",
-  "Sevişmek ah ne hoştur, yıldızların altında.",
-  "Yanmam gönlüm yansa da, ecel beni alsa da.",
-  "Gözlerim kapansa da, yıldızların altında.",
-  "Gözlerim kapansa da, yıldızların altında.",
-  "Gözlerim kapansa da, yıldızların altında.",
+  { text: "Benim gönlüm sarhoştur, yıldızların altında.", pause: 0 },
+  { text: "Sevişmek ah ne hoştur, yıldızların altında.", pause: 1000 },
+  { text: "Benim gönlüm sarhoştur, yıldızların altında.", pause: 0 },
+  { text: "Sevişmek ah ne hoştur, yıldızların altında.", pause: 1000 },
+  { text: "Mavi nurdan bir ırmak, gölgede bir salıncak.", pause: 0 },
+  { text: "Bir de ikimiz kalsak, yıldızların altında.", pause: 1000 },
+  { text: "Yanmam gönlüm yansa da, ecel beni alsa da.", pause: 0 },
+  { text: "Gözlerim kapansa da, yıldızların altında.", pause: 0 },
+  { text: "Gözlerim kapansa da, yıldızların altında.", pause: 0 },
+  { text: "Gözlerim kapansa da, yıldızların altında.", pause: 1000 },
+  { text: "Benim gönlüm sarhoştur, yıldızların altında.", pause: 0 },
+  { text: "Sevişmek ah ne hoştur, yıldızların altında.", pause: 1000 },
+  { text: "Yanmam gönlüm yansa da, ecel beni alsa da.", pause: 0 },
+  { text: "Gözlerim kapansa da, yıldızların altında.", pause: 0 },
+  { text: "Gözlerim kapansa da, yıldızların altında.", pause: 0 },
+  { text: "Gözlerim kapansa da, yıldızların altında.", pause: 1000 },
 ];
 
 /* ── KOMUT TESPİT ── */
@@ -373,70 +373,30 @@ async function runSongSequence() {
   // Şarkıyı satır satır söyle
   for (let i = 0; i < SONG_LYRICS.length; i++) {
     if (!songModeActive) break;
-    const line = SONG_LYRICS[i];
+    const line = SONG_LYRICS[i].text;
+    const pauseAfter = SONG_LYRICS[i].pause || 0;
     showLyric(line);
     setExpression(i % 3 === 0 ? 'excited' : i % 3 === 1 ? 'happy' : 'wink');
 
-    await new Promise(async resolve => {
-      const safeT = setTimeout(resolve, 12000);
-      try {
-        const apiKey = localStorage.getItem('groq_api_key') || '';
-        console.log('Şarkı satırı seslendirilyor:', line, 'Key uzunluğu:', apiKey.length);
-        
-        const res = await fetch('https://api.groq.com/openai/v1/audio/speech', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + apiKey
-          },
-          body: JSON.stringify({
-            model: 'canopylabs/orpheus-v1-english',
-            input: line,
-            voice: 'tara',
-            response_format: 'mp3'
-          })
-        });
-        
-        if (!res.ok) {
-          const errText = await res.text();
-          console.error('Groq TTS hata:', res.status, errText);
-          clearTimeout(safeT);
-          resolve();
-          return;
-        }
-        
-        const blob = await res.blob();
-        console.log('Ses alındı, boyut:', blob.size);
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.playbackRate = 0.93;
-        
-        audio.onended = () => {
-          URL.revokeObjectURL(url);
-          clearTimeout(safeT);
-          resolve();
-        };
-        audio.onerror = (e) => {
-          console.error('Audio hata:', e);
-          URL.revokeObjectURL(url);
-          clearTimeout(safeT);
-          resolve();
-        };
-        
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(e => {
-            console.error('Play hatası:', e);
-            clearTimeout(safeT);
-            resolve();
-          });
-        }
-      } catch(e) {
-        console.error('Şarkı sesi exception:', e.message);
-        clearTimeout(safeT);
-        resolve();
-      }
+    await new Promise(resolve => {
+      const synth = window.speechSynthesis;
+      synth.cancel();
+      const utt = new SpeechSynthesisUtterance(line);
+      utt.lang  = 'tr-TR';
+      utt.rate  = 0.82;  // şarkı gibi yavaş
+      utt.pitch = 1.1;
+      utt.volume = 1;
+      const voices = synth.getVoices();
+      const tr = voices.find(v => v.lang.startsWith('tr') && v.localService)
+              || voices.find(v => v.lang.startsWith('tr'));
+      if (tr) utt.voice = tr;
+      const safeT = setTimeout(resolve, 8000);
+      utt.onend = utt.onerror = () => { clearTimeout(safeT); resolve(); };
+      synth.speak(utt);
     });
+
+    // Nakarat sonrası bekleme
+    if (pauseAfter > 0) await delay3(pauseAfter);
 
     await delay3(300);
   }
