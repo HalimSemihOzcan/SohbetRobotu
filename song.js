@@ -341,14 +341,23 @@ async function runSongSequence() {
   const stageEl = buildStage();
   wearStageOutfit();
 
-  // EMO'yu sahneye taşı (SVG'yi stage içine değil, üstüne float)
+  // EMO'yu sahnenin içine taşı
   const emoRoot = document.getElementById('emoRoot');
   const origStyle = emoRoot.getAttribute('style') || '';
-  emoRoot.style.zIndex = '810';
-  emoRoot.style.position = 'fixed';
-  const sceneRect = document.querySelector('.robot-scene').getBoundingClientRect();
-  emoRoot.style.bottom = '140px';
-  emoRoot.style.left   = (window.innerWidth/2 - 120) + 'px';
+  const origParent = emoRoot.parentNode;
+  const stageEl2 = document.getElementById('songStage');
+  // EMO'yu sahne div'ine ekle
+  stageEl2.appendChild(emoRoot);
+  emoRoot.style.cssText = `
+    position:absolute;
+    bottom:100px;
+    left:50%;
+    transform:translateX(-50%);
+    width:200px;
+    height:260px;
+    z-index:815;
+    filter:drop-shadow(0 0 20px rgba(0,212,255,0.5));
+  `;
 
   await delay3(1000);
   showMicrophoneOnStage();
@@ -375,7 +384,7 @@ async function runSongSequence() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + GROQ_API_KEY
+            'Authorization': 'Bearer ' + (localStorage.getItem('groq_api_key') || GROQ_API_KEY || '')
           },
           body: JSON.stringify({
             model: 'playai-tts',
@@ -403,7 +412,11 @@ async function runSongSequence() {
   }
 
   // EMO'yu orijinal yerine geri al
-  emoRoot.setAttribute('style', origStyle);
+  const robotScene = document.querySelector('.robot-scene');
+  if (robotScene && emoRoot) {
+    robotScene.appendChild(emoRoot);
+    emoRoot.setAttribute('style', origStyle);
+  }
 
   await delay3(500);
   await endSong();

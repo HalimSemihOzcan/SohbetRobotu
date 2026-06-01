@@ -17,6 +17,13 @@ Kısa ve vurucu cevaplar ver (1-3 cümle). Noktalama doğru olsun.
 Örnek tarz: "E tabii anlıyorum, ben de bir keresinde öyle düşünmüştüm — ama ben robotum, beyin versiyonum biraz farklı çalışıyor 🤖"`;
 
 let GROQ_API_KEY = localStorage.getItem('groq_api_key') || '';
+window.GROQ_API_KEY = GROQ_API_KEY;
+
+// localStorage değişince window'u da güncelle
+Object.defineProperty(window, 'GROQ_API_KEY', {
+  get: () => GROQ_API_KEY,
+  set: (v) => { GROQ_API_KEY = v; }
+});
 let mizahModu = false;
 
 function getSystemPrompt() {
